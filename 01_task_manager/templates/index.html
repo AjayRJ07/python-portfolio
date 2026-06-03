@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Task Manager</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: Arial, sans-serif;
+      background: #f5f5f5;
+      color: #222;
+      padding: 30px 20px;
+    }
+
+    .container { max-width: 700px; margin: 0 auto; }
+
+    h1 { font-size: 24px; margin-bottom: 4px; }
+    .subtitle { font-size: 14px; color: #666; margin-bottom: 24px; }
+
+    /* ── Add form ── */
+    .add-form {
+      background: #fff;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      padding: 16px;
+      margin-bottom: 20px;
+    }
+    .add-form h2 { font-size: 15px; margin-bottom: 12px; }
+    .form-row { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 8px; }
+    .form-row input[type="text"] {
+      flex: 1; min-width: 180px;
+      padding: 7px 10px; border: 1px solid #ccc;
+      border-radius: 4px; font-size: 14px;
+    }
+    .form-row select {
+      padding: 7px 10px; border: 1px solid #ccc;
+      border-radius: 4px; font-size: 14px; background: #fff;
+    }
+    .form-row input[type="date"] {
+      padding: 7px 10px; border: 1px solid #ccc;
+      border-radius: 4px; font-size: 14px;
+    }
+    .btn {
+      padding: 7px 14px; border: none; border-radius: 4px;
+      font-size: 14px; cursor: pointer;
+    }
+    .btn-primary { background: #2563eb; color: #fff; }
+    .btn-primary:hover { background: #1d4ed8; }
+    .btn-danger  { background: #dc2626; color: #fff; font-size: 12px; padding: 4px 10px; }
+    .btn-danger:hover  { background: #b91c1c; }
+    .btn-success { background: #16a34a; color: #fff; font-size: 12px; padding: 4px 10px; }
+    .btn-success:hover { background: #15803d; }
+    .btn-clear   { background: #f3f4f6; color: #555; border: 1px solid #ddd; }
+    .btn-clear:hover { background: #e5e7eb; }
+
+    /* ── Filters ── */
+    .filters {
+      display: flex; gap: 8px; flex-wrap: wrap;
+      margin-bottom: 16px; align-items: center;
+    }
+    .filters label { font-size: 13px; color: #555; }
+    .filters select {
+      padding: 5px 8px; border: 1px solid #ccc;
+      border-radius: 4px; font-size: 13px; background: #fff;
+    }
+    .filters form { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+
+    /* ── Stats bar ── */
+    .stats {
+      font-size: 13px; color: #555;
+      margin-bottom: 12px;
+      display: flex; gap: 16px; align-items: center; flex-wrap: wrap;
+    }
+
+    /* ── Task list ── */
+    .task-list { display: flex; flex-direction: column; gap: 8px; }
+
+    .task {
+      background: #fff;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      padding: 12px 14px;
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+    }
+    .task.done { opacity: 0.55; }
+    .task.overdue { border-left: 3px solid #dc2626; }
+
+    .task-left { flex: 1; }
+    .task-title {
+      font-size: 15px;
+      text-decoration: none;
+      color: #222;
+    }
+    .task.done .task-title { text-decoration: line-through; color: #888; }
+
+    .task-meta { font-size: 12px; color: #888; margin-top: 4px; display: flex; gap: 10px; flex-wrap: wrap; }
+
+    .badge {
+      display: inline-block;
+      font-size: 11px; font-weight: 600;
+      padding: 2px 7px; border-radius: 10px;
+    }
+    .badge-high   { background: #fee2e2; color: #991b1b; }
+    .badge-medium { background: #fef9c3; color: #854d0e; }
+    .badge-low    { background: #dcfce7; color: #166534; }
+    .badge-done   { background: #e0e7ff; color: #3730a3; }
+    .overdue-tag  { color: #dc2626; font-weight: 600; }
+
+    .task-actions { display: flex; gap: 6px; align-items: center; flex-shrink: 0; }
+
+    .empty { text-align: center; color: #999; padding: 40px 0; font-size: 14px; }
+
+    a.action-link {
+      padding: 4px 10px; border-radius: 4px;
+      font-size: 12px; text-decoration: none; font-weight: 500;
+    }
+    a.action-done   { background: #16a34a; color: #fff; }
+    a.action-done:hover { background: #15803d; }
+    a.action-delete { background: #dc2626; color: #fff; }
+    a.action-delete:hover { background: #b91c1c; }
+  </style>
+</head>
+<body>
+<div class="container">
+
+  <h1>Task Manager</h1>
+  <p class="subtitle">Manage your tasks — add, track, and complete.</p>
+
+  <!-- Add form -->
+  <div class="add-form">
+    <h2>Add New Task</h2>
+    <form action="/add" method="POST">
+      <div class="form-row">
+        <input type="text" name="title" placeholder="Task title..." required>
+        <select name="priority">
+          <option value="high">High</option>
+          <option value="medium" selected>Medium</option>
+          <option value="low">Low</option>
+        </select>
+        <input type="date" name="due_date">
+        <button type="submit" class="btn btn-primary">Add</button>
+      </div>
+    </form>
+  </div>
+
+  <!-- Filters -->
+  <div class="filters">
+    <form method="GET" action="/">
+      <label>Priority:</label>
+      <select name="priority" onchange="this.form.submit()">
+        <option value="all"    {% if priority == 'all'    %}selected{% endif %}>All</option>
+        <option value="high"   {% if priority == 'high'   %}selected{% endif %}>High</option>
+        <option value="medium" {% if priority == 'medium' %}selected{% endif %}>Medium</option>
+        <option value="low"    {% if priority == 'low'    %}selected{% endif %}>Low</option>
+      </select>
+      <label>Status:</label>
+      <select name="status" onchange="this.form.submit()">
+        <option value="all"     {% if status == 'all'     %}selected{% endif %}>All</option>
+        <option value="pending" {% if status == 'pending' %}selected{% endif %}>Pending</option>
+        <option value="done"    {% if status == 'done'    %}selected{% endif %}>Done</option>
+      </select>
+    </form>
+    {% if done_count > 0 %}
+    <a href="/clear-done" class="btn btn-clear" style="font-size:13px;">Clear completed ({{ done_count }})</a>
+    {% endif %}
+  </div>
+
+  <!-- Stats -->
+  <div class="stats">
+    <span>{{ total }} total</span>
+    <span>{{ done_count }} done</span>
+    <span>{{ total - done_count }} pending</span>
+  </div>
+
+  <!-- Task list -->
+  <div class="task-list">
+    {% if not tasks %}
+      <div class="empty">No tasks found. Add one above!</div>
+    {% endif %}
+
+    {% for t in tasks %}
+    {% set is_overdue = t.due_date and not t.done and t.due_date < today %}
+    <div class="task {% if t.done %}done{% endif %} {% if is_overdue %}overdue{% endif %}">
+      <div class="task-left">
+        <div class="task-title">{{ t.title }}</div>
+        <div class="task-meta">
+          <span class="badge badge-{{ t.priority }}">{{ t.priority }}</span>
+          {% if t.done %}<span class="badge badge-done">Done</span>{% endif %}
+          {% if t.due_date %}
+            <span {% if is_overdue %}class="overdue-tag"{% endif %}>
+              Due: {{ t.due_date }}{% if is_overdue %} — OVERDUE{% endif %}
+            </span>
+          {% endif %}
+          <span>#{{ t.id }}</span>
+        </div>
+      </div>
+      <div class="task-actions">
+        {% if not t.done %}
+        <a href="/done/{{ t.id }}" class="action-link action-done">Done</a>
+        {% endif %}
+        <a href="/delete/{{ t.id }}" class="action-link action-delete">Delete</a>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+
+</div>
+</body>
+</html>
