@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Async News Fetcher</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: Arial, sans-serif; background: #f5f5f5; color: #222; padding: 30px 20px; }
+    .container { max-width: 820px; margin: 0 auto; }
+
+    h1 { font-size: 24px; margin-bottom: 4px; }
+    .subtitle { font-size: 14px; color: #666; margin-bottom: 24px; }
+
+    /* ── Control panel ── */
+    .panel {
+      background: #fff; border: 1px solid #ddd;
+      border-radius: 6px; padding: 16px; margin-bottom: 20px;
+    }
+    .panel h2 { font-size: 15px; margin-bottom: 12px; }
+
+    .source-grid {
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+      gap: 8px; margin-bottom: 14px;
+    }
+    .source-item {
+      display: flex; align-items: center; gap: 6px;
+      font-size: 13px; cursor: pointer;
+      padding: 6px 8px; border: 1px solid #ddd;
+      border-radius: 4px; background: #fafafa;
+    }
+    .source-item:hover { background: #f0f4ff; border-color: #93c5fd; }
+    .source-item input { cursor: pointer; }
+
+    .btn {
+      padding: 8px 20px; border: none; border-radius: 4px;
+      font-size: 14px; cursor: pointer; font-weight: 500;
+    }
+    .btn-primary { background: #2563eb; color: #fff; }
+    .btn-primary:hover { background: #1d4ed8; }
+    .select-btns { display: flex; gap: 8px; margin-bottom: 12px; }
+    .btn-sm {
+      padding: 4px 10px; font-size: 12px; border: 1px solid #ccc;
+      border-radius: 4px; background: #fff; cursor: pointer;
+    }
+    .btn-sm:hover { background: #f0f4ff; }
+
+    /* ── Error ── */
+    .error {
+      background: #fee2e2; border: 1px solid #fca5a5;
+      border-radius: 6px; padding: 12px 14px;
+      color: #991b1b; font-size: 14px; margin-bottom: 16px;
+    }
+
+    /* ── Benchmark bar ── */
+    .bench {
+      display: flex; gap: 20px; flex-wrap: wrap;
+      background: #fff; border: 1px solid #ddd;
+      border-radius: 6px; padding: 12px 16px;
+      margin-bottom: 20px; align-items: center;
+    }
+    .bench-stat { text-align: center; }
+    .bench-num   { font-size: 22px; font-weight: 700; color: #2563eb; }
+    .bench-label { font-size: 12px; color: #666; }
+    .bench-note  { font-size: 12px; color: #888; margin-left: auto; }
+
+    /* ── Source result ── */
+    .source-block {
+      background: #fff; border: 1px solid #ddd;
+      border-radius: 6px; margin-bottom: 12px; overflow: hidden;
+    }
+    .source-header {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 10px 14px; background: #f8f9fa;
+      border-bottom: 1px solid #eee; cursor: pointer;
+    }
+    .source-name  { font-size: 14px; font-weight: 600; }
+    .source-meta  { font-size: 12px; color: #888; }
+    .badge-ok     { background: #dcfce7; color: #166534; padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: 600; }
+    .badge-fail   { background: #fee2e2; color: #991b1b; padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: 600; }
+
+    .article-list { padding: 10px 14px; display: flex; flex-direction: column; gap: 10px; }
+    .article { border-bottom: 1px solid #f0f0f0; padding-bottom: 10px; }
+    .article:last-child { border-bottom: none; padding-bottom: 0; }
+    .article-title a {
+      font-size: 14px; color: #1d4ed8; text-decoration: none; line-height: 1.4;
+    }
+    .article-title a:hover { text-decoration: underline; }
+    .article-desc { font-size: 12px; color: #666; margin-top: 3px; line-height: 1.4; }
+    .article-date { font-size: 11px; color: #aaa; margin-top: 3px; }
+
+    .error-msg { padding: 10px 14px; color: #dc2626; font-size: 13px; }
+  </style>
+</head>
+<body>
+<div class="container">
+
+  <h1>Async News Fetcher</h1>
+  <p class="subtitle">Fetch headlines from multiple RSS sources simultaneously using asyncio.</p>
+
+  <!-- Control panel -->
+  <div class="panel">
+    <h2>Select Sources</h2>
+    <form method="POST" action="/">
+      <div class="select-btns">
+        <button type="button" class="btn-sm" onclick="setAll(true)">Select all</button>
+        <button type="button" class="btn-sm" onclick="setAll(false)">Clear all</button>
+      </div>
+      <div class="source-grid">
+        {% for source in sources %}
+        <label class="source-item">
+          <input type="checkbox" name="sources" value="{{ source }}"
+            {% if not fetched or source in selected %}checked{% endif %}>
+          {{ source }}
+        </label>
+        {% endfor %}
+      </div>
+      <button type="submit" class="btn btn-primary">Fetch Headlines</button>
+    </form>
+  </div>
+
+  <!-- Error -->
+  {% if error %}
+  <div class="error">{{ error }}</div>
+  {% endif %}
+
+  {% if fetched %}
+
+  <!-- Benchmark -->
+  <div class="bench">
+    <div class="bench-stat">
+      <div class="bench-num">{{ benchmark.total_duration }}s</div>
+      <div class="bench-label">Total time</div>
+    </div>
+    <div class="bench-stat">
+      <div class="bench-num">{{ benchmark.total_articles }}</div>
+      <div class="bench-label">Articles</div>
+    </div>
+    <div class="bench-stat">
+      <div class="bench-num">{{ benchmark.successful }}/{{ benchmark.total_sources }}</div>
+      <div class="bench-label">Sources OK</div>
+    </div>
+    <div class="bench-stat">
+      <div class="bench-num">{{ benchmark.fetched_at.split(' ')[1] }}</div>
+      <div class="bench-label">Fetched at</div>
+    </div>
+    <div class="bench-note">All {{ benchmark.total_sources }} sources fetched concurrently</div>
+  </div>
+
+  <!-- Results per source -->
+  {% for result in results %}
+  <div class="source-block">
+    <div class="source-header" onclick="toggle('src-{{ loop.index }}')">
+      <span class="source-name">{{ result.source }}</span>
+      <span style="display:flex; gap:10px; align-items:center;">
+        <span class="source-meta">{{ result.duration | round(2) }}s</span>
+        {% if result.success %}
+          <span class="source-meta">{{ result.articles | length }} articles</span>
+          <span class="badge-ok">OK</span>
+        {% else %}
+          <span class="badge-fail">FAILED</span>
+        {% endif %}
+      </span>
+    </div>
+
+    <div id="src-{{ loop.index }}">
+      {% if result.success %}
+      <div class="article-list">
+        {% for article in result.articles %}
+        <div class="article">
+          <div class="article-title">
+            <a href="{{ article.link }}" target="_blank" rel="noopener">{{ article.title }}</a>
+          </div>
+          {% if article.description %}
+          <div class="article-desc">{{ article.description[:180] }}</div>
+          {% endif %}
+          {% if article.published %}
+          <div class="article-date">{{ article.published[:40] }}</div>
+          {% endif %}
+        </div>
+        {% endfor %}
+      </div>
+      {% else %}
+      <div class="error-msg">Error: {{ result.error }}</div>
+      {% endif %}
+    </div>
+  </div>
+  {% endfor %}
+
+  {% endif %}
+
+</div>
+
+<script>
+  function toggle(id) {
+    const el = document.getElementById(id);
+    el.style.display = el.style.display === 'none' ? '' : 'none';
+  }
+  function setAll(checked) {
+    document.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = checked);
+  }
+</script>
+</body>
+</html>
