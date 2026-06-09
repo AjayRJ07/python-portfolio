@@ -172,7 +172,7 @@ python-portfolio/
     ├── app.py                # Flask UI — port 5002
     ├── requirements.txt
     ├── templates/
-        └── tests/
+    └── tests/
 
 ```
 
