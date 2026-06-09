@@ -1,4 +1,4 @@
-# Python Portfolio 🐍
+# Python Portfolio 
 
 A collection of Python projects covering **Core** and **Advanced** concepts — built as part of a full-stack AI/ML portfolio.
 
