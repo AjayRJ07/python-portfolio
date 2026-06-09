@@ -13,8 +13,6 @@ A collection of Python projects covering **Core** and **Advanced** concepts — 
 | 01 | [CLI Task Manager](#01-cli-task-manager) | OOP · argparse · File I/O · JSON · pytest | Core |
 | 02 | [Web Scraper](#02-web-scraper) | requests · BeautifulSoup · CSV · JSON export | Core |
 | 03 | [Async News Fetcher](#03-async-news-fetcher) | asyncio · aiohttp · RSS · concurrency | Advanced |
-| 04 | [Design Patterns Demo](#04-design-patterns-demo) | Decorators · Cache · Rate Limiter · Circuit Breaker | Advanced |
-
 ---
 
 ## 01 CLI Task Manager
@@ -151,47 +149,6 @@ Speedup:             6.3x faster
 
 ---
 
-## 04 Design Patterns Demo
-
-**Folder:** `04_design_patterns/`
-
-Production-grade implementations of 4 real-world Python patterns — each one is interactive in the Flask UI.
-
-| Pattern | What it does | Real-world use |
-|---------|-------------|----------------|
-| `@retry` | Retries failing functions with exponential backoff | API calls · DB connections |
-| `@cache` | Memoizes results with TTL and max size limit | DB queries · heavy computations |
-| `@rate_limit` | Limits calls per time window (sliding window) | External APIs · login endpoints |
-| `CircuitBreaker` | Blocks calls after N failures, auto-recovers | Microservices · payment gateways |
-
-**Run CLI:**
-```bash
-cd 04_design_patterns
-pip install -r requirements.txt
-
-python cli.py                       # run all 4 demos
-python cli.py --pattern retry
-python cli.py --pattern cache
-python cli.py --pattern ratelimit
-python cli.py --pattern circuit
-```
-
-**Run Flask UI:**
-```bash
-python app.py
-# Open http://127.0.0.1:5003
-# All 4 patterns are interactive — trigger each one live with buttons
-```
-
-**Run Tests:**
-```bash
-pytest tests/ -v
-```
-
-**Concepts:** Decorators with arguments · functools.wraps · threading.Lock · Enum state machine · Memoization · Sliding window · Thread safety
-
----
-
 ## Repo Structure
 
 ```
@@ -210,19 +167,13 @@ python-portfolio/
 │   ├── templates/
 │   └── tests/
 ├── 03_async_news_fetcher/
-│   ├── fetcher.py            # Core async logic
-│   ├── cli.py                # CLI entry point
-│   ├── app.py                # Flask UI — port 5002
-│   ├── requirements.txt
-│   ├── templates/
-│   └── tests/
-└── 04_design_patterns/
-    ├── patterns.py           # All 4 patterns
-    ├── cli.py                # CLI demo
-    ├── app.py                # Flask UI — port 5003
+    ├── fetcher.py            # Core async logic
+    ├── cli.py                # CLI entry point
+    ├── app.py                # Flask UI — port 5002
     ├── requirements.txt
     ├── templates/
-    └── tests/
+        └── tests/
+
 ```
 
 ---
